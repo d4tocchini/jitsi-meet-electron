@@ -78,11 +78,6 @@ type State = {
  */
 class Conference extends Component<Props, State> {
     /**
-     * Reference to the element of this component.
-     */
-    _ref: Object;
-
-    /**
      * External API object.
      */
     _api: Object;
@@ -93,16 +88,22 @@ class Conference extends Component<Props, State> {
     _conference: Object;
 
     /**
+     * Timer to cancel the joining if it takes too long.
+     */
+    _loadTimer: ?TimeoutID;
+
+    /**
+     * Reference to the element of this component.
+     */
+    _ref: Object;
+
+    /**
      * Initializes a new {@code Conference} instance.
      *
      * @inheritdoc
      */
     constructor() {
         super();
-
-        // External API will load an instance of babel-polyfill. Hence we
-        // should remove existing babel-polyfill instance.
-        delete global._babelPolyfill;
 
         this.state = {
             isLoading: true
@@ -139,6 +140,20 @@ class Conference extends Component<Props, State> {
         script.src = getExternalApiURL(serverURL);
 
         this._ref.current.appendChild(script);
+
+        // Set a timer for 10s, if we haven't loaded the iframe by then,
+        // give up.
+        this._loadTimer = setTimeout(() => {
+            this._navigateToHome(
+
+                // $FlowFixMe
+                {
+                    error: 'Loading error',
+                    type: 'error'
+                },
+                room,
+                serverURL);
+        }, 10000);
     }
 
     /**
@@ -167,6 +182,9 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     componentWillUnmount() {
+        if (this._loadTimer) {
+            clearTimeout(this._loadTimer);
+        }
         if (this._api) {
             this._api.dispose();
         }
@@ -294,6 +312,11 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     _onIframeLoad() {
+        if (this._loadTimer) {
+            clearTimeout(this._loadTimer);
+            this._loadTimer = null;
+        }
+
         this.setState({
             isLoading: false
         });
