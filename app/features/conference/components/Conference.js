@@ -6,7 +6,6 @@ import React, { Component } from 'react';
 import type { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
-import URL from 'url';
 
 import {
     RemoteControl,
@@ -19,6 +18,7 @@ import {
 import config from '../../config';
 import { setEmail, setName } from '../../settings';
 
+import { conferenceEnded, conferenceJoined } from '../actions';
 import { LoadingIndicator, Wrapper } from '../styled';
 import { getExternalApiURL } from '../../utils';
 
@@ -78,14 +78,24 @@ type State = {
  */
 class Conference extends Component<Props, State> {
     /**
-     * Reference to the element of this component.
-     */
-    _ref: Object;
-
-    /**
      * External API object.
      */
     _api: Object;
+
+    /**
+     * Conference Object.
+     */
+    _conference: Object;
+
+    /**
+     * Timer to cancel the joining if it takes too long.
+     */
+    _loadTimer: ?TimeoutID;
+
+    /**
+     * Reference to the element of this component.
+     */
+    _ref: Object;
 
     /**
      * Initializes a new {@code Conference} instance.
@@ -94,10 +104,6 @@ class Conference extends Component<Props, State> {
      */
     constructor() {
         super();
-
-        // External API will load an instance of babel-polyfill. Hence we
-        // should remove existing babel-polyfill instance.
-        delete global._babelPolyfill;
 
         this.state = {
             isLoading: true
@@ -120,15 +126,34 @@ class Conference extends Component<Props, State> {
             || this.props._serverURL
             || config.defaultServerURL;
 
+        this._conference = {
+            room,
+            serverURL
+        };
+
         const script = document.createElement('script');
 
         script.async = true;
-        script.onload = () => this._onScriptLoad(parentNode, room, serverURL);
+        script.onload = () => this._onScriptLoad(parentNode);
         script.onerror = (event: Event) =>
             this._navigateToHome(event, room, serverURL);
         script.src = getExternalApiURL(serverURL);
 
         this._ref.current.appendChild(script);
+
+        // Set a timer for 10s, if we haven't loaded the iframe by then,
+        // give up.
+        this._loadTimer = setTimeout(() => {
+            this._navigateToHome(
+
+                // $FlowFixMe
+                {
+                    error: 'Loading error',
+                    type: 'error'
+                },
+                room,
+                serverURL);
+        }, 10000);
     }
 
     /**
@@ -157,6 +182,9 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     componentWillUnmount() {
+        if (this._loadTimer) {
+            clearTimeout(this._loadTimer);
+        }
         if (this._api) {
             this._api.dispose();
         }
@@ -211,14 +239,12 @@ class Conference extends Component<Props, State> {
      * and attach utils from jitsi-meet-electron-utils.
      *
      * @param {Object} parentNode - Node to which iframe has to be attached.
-     * @param {string} roomName - Conference room name to be joined.
-     * @param {string} serverURL - Jitsi Meet server url.
      * @returns {void}
      */
-    _onScriptLoad(parentNode: Object, roomName: string, serverURL: string) {
+    _onScriptLoad(parentNode: Object) {
         const JitsiMeetExternalAPI = window.JitsiMeetExternalAPI;
 
-        const { host } = URL.parse(serverURL);
+        const host = this._conference.serverURL.replace(/https?:\/\//, '');
 
         const configOverwrite = {
             startWithAudioMuted: this.props._startWithAudioMuted,
@@ -229,7 +255,7 @@ class Conference extends Component<Props, State> {
             configOverwrite,
             onload: this._onIframeLoad,
             parentNode,
-            roomName
+            roomName: this._conference.room
         });
         initPopupsConfigurationRender(this._api);
 
@@ -240,11 +266,16 @@ class Conference extends Component<Props, State> {
         setupAlwaysOnTopRender(this._api);
         setupWiFiStats(iframe);
 
-        this._api.on('readyToClose', (event: Event) =>
-            this._navigateToHome(event));
+        this._api.on('readyToClose', (event: Event) => {
+            this.props.dispatch(conferenceEnded(this._conference));
+            this._navigateToHome(event);
+        });
         this._api.on('videoConferenceJoined',
-            (conferenceInfo: Object) =>
-                this._onVideoConferenceJoined(conferenceInfo));
+            (conferenceInfo: Object) => {
+                this.props.dispatch(conferenceJoined(this._conference));
+                this._onVideoConferenceJoined(conferenceInfo);
+            }
+        );
     }
 
     /**
@@ -281,6 +312,11 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     _onIframeLoad() {
+        if (this._loadTimer) {
+            clearTimeout(this._loadTimer);
+            this._loadTimer = null;
+        }
+
         this.setState({
             isLoading: false
         });

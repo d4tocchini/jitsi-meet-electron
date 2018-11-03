@@ -2,6 +2,7 @@
 
 import Button from '@atlaskit/button';
 import { FieldTextStateless } from '@atlaskit/field-text';
+import { SpotlightTarget } from '@atlaskit/onboarding';
 import Page from '@atlaskit/page';
 import { AtlasKitThemeProvider } from '@atlaskit/theme';
 
@@ -11,9 +12,11 @@ import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
 
 import { Navbar } from '../../navbar';
+import { Onboarding, startOnboarding } from '../../onboarding';
+import { RecentList } from '../../recent-list';
 import { normalizeServerURL } from '../../utils';
 
-import { WelcomeWrapper as Wrapper, Content, Form } from '../styled';
+import { Body, Form, Header, Wrapper } from '../styled';
 
 
 type Props = {
@@ -50,23 +53,7 @@ class Welcome extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = {
-            url: ''
-        };
-
-        // Bind event handlers.
-        this._onURLChange = this._onURLChange.bind(this);
-        this._onFormSubmit = this._onFormSubmit.bind(this);
-        this._onJoin = this._onJoin.bind(this);
-    }
-
-    /**
-     * Initialize url value in state if passed using location state object.
-     *
-     * @param {Props} props - New props of the component.
-     * @returns {State} - New state of the component.
-     */
-    static getDerivedStateFromProps(props) {
+        // Initialize url value in state if passed using location state object.
         let url = '';
 
         // Check and parse url if exists in location state.
@@ -78,8 +65,23 @@ class Welcome extends Component<Props, State> {
             }
         }
 
-        // Return local state object having input url.
-        return { url };
+        this.state = { url };
+
+        // Bind event handlers.
+        this._onURLChange = this._onURLChange.bind(this);
+        this._onFormSubmit = this._onFormSubmit.bind(this);
+        this._onJoin = this._onJoin.bind(this);
+    }
+
+    /**
+     * Start Onboarding once component is mounted.
+     *
+     * NOTE: It autonatically checks if the onboarding is shown or not.
+     *
+     * @returns {void}
+     */
+    componentDidMount() {
+        this.props.dispatch(startOnboarding('welcome-page'));
     }
 
     /**
@@ -88,30 +90,13 @@ class Welcome extends Component<Props, State> {
      * @returns {ReactElement}
      */
     render() {
-        const { state } = this.props.location;
-
         return (
             <Page navigation = { <Navbar /> }>
                 <AtlasKitThemeProvider mode = 'light'>
                     <Wrapper>
-                        <Content>
-                            <Form onSubmit = { this._onFormSubmit }>
-                                <FieldTextStateless
-                                    autoFocus = { true }
-                                    isInvalid = { state && state.error }
-                                    isLabelHidden = { true }
-                                    onChange = { this._onURLChange }
-                                    shouldFitContainer = { true }
-                                    type = 'text'
-                                    value = { this.state.url } />
-                            </Form>
-                            <Button
-                                appearance = 'primary'
-                                onClick = { this._onJoin }
-                                type = 'button'>
-                                GO
-                            </Button>
-                        </Content>
+                        { this._renderHeader() }
+                        { this._renderBody() }
+                        <Onboarding section = 'welcome-page' />
                     </Wrapper>
                 </AtlasKitThemeProvider>
             </Page>
@@ -182,6 +167,53 @@ class Welcome extends Component<Props, State> {
         this.setState({
             url: event.currentTarget.value
         });
+    }
+
+    /**
+     * Renders the body for the welcome page.
+     *
+     * @returns {ReactElement}
+     */
+    _renderBody() {
+        return (
+            <Body>
+                <RecentList />
+            </Body>
+        );
+    }
+
+    /**
+     * Renders the header for the welcome page.
+     *
+     * @returns {ReactElement}
+     */
+    _renderHeader() {
+        const locationState = this.props.location.state;
+        const locationError = locationState && locationState.error;
+
+        return (
+            <Header>
+                <SpotlightTarget name = 'conference-url'>
+                    <Form onSubmit = { this._onFormSubmit }>
+                        <FieldTextStateless
+                            autoFocus = { true }
+                            isInvalid = { locationError }
+                            isLabelHidden = { true }
+                            onChange = { this._onURLChange }
+                            placeholder = 'Enter a name for your conference'
+                            shouldFitContainer = { true }
+                            type = 'text'
+                            value = { this.state.url } />
+                    </Form>
+                </SpotlightTarget>
+                <Button
+                    appearance = 'primary'
+                    onClick = { this._onJoin }
+                    type = 'button'>
+                    GO
+                </Button>
+            </Header>
+        );
     }
 }
 

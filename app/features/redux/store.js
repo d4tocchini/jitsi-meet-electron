@@ -11,6 +11,8 @@ const persistConfig = {
     key: 'root',
     storage: createElectronStorage(),
     whitelist: [
+        'onboarding',
+        'recentList',
         'settings'
     ]
 };
