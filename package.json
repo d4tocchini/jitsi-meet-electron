@@ -74,7 +74,8 @@
   "author": "Jitsi Team <support@jitsi.org>",
   "readmeFilename": "README.md",
   "license": "Apache-2.0",
-  "dependencies": {
+
+"_deps": {
     "@atlaskit/avatar": "14.1.1",
     "@atlaskit/button": "9.0.13",
     "@atlaskit/css-reset": "3.0.2",
@@ -94,8 +95,6 @@
     "electron-updater": "3.1.2",
     "electron-window-state": "5.0.1",
     "history": "4.7.2",
-    "jitsi-meet-electron-utils": "github:jitsi/jitsi-meet-electron-utils#1972c3bf0884ace68eb496894dabae593d6dbf49",
-    "js-utils": "github:jitsi/js-utils#0c53500a5120be2aa3fc590f0f932a0d4771920f",
     "moment": "2.22.2",
     "mousetrap": "1.6.2",
     "react": "16.5.2",
@@ -107,9 +106,11 @@
     "redux-persist": "5.10.0",
     "redux-persist-electron-storage": "1.1.2",
     "source-map-support": "0.5.9",
-    "styled-components": "3.4.10"
+    "styled-components": "3.4.10",
+    "jitsi-meet-electron-utils": "github:jitsi/jitsi-meet-electron-utils#1972c3bf0884ace68eb496894dabae593d6dbf49",
+    "js-utils": "github:jitsi/js-utils#0c53500a5120be2aa3fc590f0f932a0d4771920f"
   },
-  "devDependencies": {
+  "_dev_deps": {
     "@babel/core": "7.1.2",
     "@babel/plugin-proposal-class-properties": "7.1.0",
     "@babel/plugin-proposal-export-namespace-from": "7.0.0",
@@ -135,10 +136,21 @@
     "file-loader": "2.0.0",
     "flow-bin": "0.81.0",
     "html-webpack-plugin": "3.2.0",
-    "precommit-hook": "3.0.0",
+    "---precommit-hook": "3.0.0",
     "style-loader": "0.23.1",
     "svg-inline-loader": "0.8.0",
     "webpack": "4.20.2",
     "webpack-cli": "3.1.2"
+  },
+  "dependencies": {
+  },
+
+  "resolutions": {
+    "minimist": "1.2.0",
+    "pump": "2.0.1",
+    "string-width": "2.1.1",
+    "strip-ansi": "4.0.0",
+    "is-fullwidth-code-point": "2.0.0",
+    "ansi-regex": "3.0.0
   }
 }

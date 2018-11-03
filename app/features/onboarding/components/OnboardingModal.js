@@ -6,7 +6,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import type { Dispatch } from 'redux';
 
-import OnboardingModalImage from '../../../images/onboarding.png';
+// import OnboardingModalImage from '../../../images/onboarding.png';
 
 import config from '../../config';
 
@@ -56,7 +56,7 @@ class OnboardingModal extends Component<Props, *> {
                     }
                 ] }
                 heading = { `Welcome to ${config.appName}` }
-                image = { OnboardingModalImage } >
+                image = { '../../../images/onboarding.png' } >
                 <p> Let us show you around!</p>
             </Modal>
         );
