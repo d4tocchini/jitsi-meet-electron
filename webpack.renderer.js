@@ -1,16 +1,40 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const ELECTRON_VERSION = require('./package.json').devDependencies.electron;
+const glob = require('glob');
+//Generate object for webpack entry
+//rename './app/modules/module1/script.js' -> 'module1/script'
+var n = 0
+var entryObject = glob.sync('./app/**/*.js').reduce(
+    function (entries, entry) {
+        console.log(entry)
+        if (entry.endsWith('.js') && n < 4) {
+            n++
+            let e = entry.split('/')
+            // e.length--
+            e.splice(0, 2)
+            e = ['.'].concat(e)
+            e = e.join('/')
+            e = e.substr(0,e.indexOf('.'))
+            // if (!e) e= 'app'
+            entries[e] = '.'+entry.substr(entry.indexOf('/app/'))
+        }
+        return entries;
+    }, 
+    {}
+);
+console.log(entryObject)
+
+// const ELECTRON_VERSION = require('./package.json').devDependencies.electron;
 
 module.exports = {
     target: 'electron-renderer',
-    entry: { app: './app/index.js' },
-    plugins: [
-        new HtmlWebpackPlugin({
-            template: './app/index.html'
-        })
-    ],
+    entry:entryObject, //{ app: './app/index.js' },
+    // plugins: [
+    //     new HtmlWebpackPlugin({
+    //         template: './app/index.html'
+    //     })
+    // ],
     output: {
         path: path.resolve('./build'),
         filename: '[name].js'
@@ -21,6 +45,7 @@ module.exports = {
     module: {
         rules: [
             {
+                // include: /ZZZZZZ/,
                 exclude: /node_modules(?!(\/|\\)js-utils)/,
                 loader: 'babel-loader',
                 options: {
@@ -31,7 +56,9 @@ module.exports = {
                             {
                                 modules: false,
                                 targets: {
-                                    electron: ELECTRON_VERSION
+                                    // electron: ELECTRON_VERSION,
+                                    "chrome": "66",
+                                    node: process.versions.node
                                 }
                             }
                         ],
@@ -66,7 +93,9 @@ module.exports = {
     } ],
     resolve: {
         modules: [
-            path.resolve('./node_modules')
+            // D4
+            // path.resolve('../../../../node_modules')
+            path.resolve('../../../../node_modules')
         ]
     }
 };

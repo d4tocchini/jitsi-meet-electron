@@ -10,7 +10,7 @@ import { SettingsButton, SettingsDrawer } from '../../settings';
 import { isElectronMac } from '../../utils';
 
 import HelpButton from './HelpButton';
-import Logo from './Logo';
+// import Logo from './Logo';
 
 type Props = {
 
@@ -64,7 +64,7 @@ class Navbar extends Component<Props, *> {
                         key = { 0 } />
                 ] }
                 globalPrimaryActions = { this._getPrimaryActions() }
-                globalPrimaryIcon = { <Logo /> }
+                // globalPrimaryIcon = { <Logo /> }
                 globalSecondaryActions = { this._getSecondaryActions() }
                 isElectronMac = { isElectronMac() }
                 isOpen = { false }

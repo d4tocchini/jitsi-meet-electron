@@ -17,7 +17,9 @@ module.exports = {
     } ],
     resolve: {
         modules: [
-            path.resolve('./node_modules')
+            // D4
+            // path.resolve('../../../../node_modules')
+            path.resolve('../../../../node_modules')
         ]
     }
 };

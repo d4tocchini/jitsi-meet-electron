@@ -4,10 +4,13 @@ const {
     BrowserWindow,
     Menu,
     app,
-    shell
+    shell,
+    session
 } = require('electron');
+// D4
+const blink = require('window/blink')
 const isDev = require('electron-is-dev');
-const { autoUpdater } = require('electron-updater');
+// const { autoUpdater } = require('electron-updater');
 const windowStateKeeper = require('electron-window-state');
 const {
     initPopupsConfigurationMain,
@@ -17,8 +20,8 @@ const {
 const path = require('path');
 const URL = require('url');
 
-autoUpdater.logger = require('electron-log');
-autoUpdater.logger.transports.file.level = 'info';
+// autoUpdater.logger = require('electron-log');
+// autoUpdater.logger.transports.file.level = 'info';
 
 /**
  * When in development mode:
@@ -27,7 +30,7 @@ autoUpdater.logger.transports.file.level = 'info';
  */
 if (isDev) {
     require('electron-debug')({ showDevTools: false });
-    require('electron-reload')(path.join(__dirname, 'build'));
+    // require('electron-reload')(path.join(__dirname, 'build'));
 }
 
 /**
@@ -104,7 +107,8 @@ function createJitsiMeetWindow() {
     setApplicationMenu();
 
     // Check for Updates.
-    autoUpdater.checkForUpdatesAndNotify();
+    // D4
+    // autoUpdater.checkForUpdatesAndNotify();
 
     // Load the previous window state with fallback to defaults.
     const windowState = windowStateKeeper({
@@ -117,7 +121,7 @@ function createJitsiMeetWindow() {
 
     // URL for index.html which will be our entry point.
     const indexURL = URL.format({
-        pathname: path.resolve(basePath, './build/index.html'),
+        pathname: path.resolve(basePath, './app/index.html'),
         protocol: 'file:',
         slashes: true
     });
@@ -133,9 +137,10 @@ function createJitsiMeetWindow() {
         minHeight: 600,
         show: false,
         titleBarStyle: 'hidden',
-        webPreferences: {
+        // D4
+        webPreferences: blink.setWebPrefs({},{
             nativeWindowOpen: true
-        }
+        })
     };
 
     mainWindow = new BrowserWindow(options);
@@ -144,6 +149,32 @@ function createJitsiMeetWindow() {
 
     initPopupsConfigurationMain(mainWindow);
     setupAlwaysOnTopMain(mainWindow);
+
+
+    // D4
+    session.defaultSession.webRequest.onBeforeRequest(function (details, callback) {
+        const url = details.url
+        const requestHeaders = details.requestHeaders
+        // "https://cdn.jitsi.net/meetjitsi_3036.1416/images/watermark.png"
+        if (url.endsWith('.js') && url.includes('analytics')) {
+            callback({
+                cancel: true,
+                requestHeaders
+            })
+        }
+        else if (url.endsWith('watermark.png')) {
+            callback({
+                cancel: true,
+                requestHeaders
+            })
+        }
+        else {
+            callback({
+                cancel: false,
+                requestHeaders
+            })
+        }
+    })
 
     mainWindow.webContents.on('new-window', (event, url, frameName) => {
         const target = getPopupTarget(url, frameName);
@@ -205,6 +236,7 @@ app.on('second-instance', () => {
         mainWindow.focus();
     }
 });
+
 
 app.on('window-all-closed', () => {
     // Don't quit the application on macOS.

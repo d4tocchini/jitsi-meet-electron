@@ -2,7 +2,7 @@
 
 import styled from 'styled-components';
 
-export default styled.span`
+module.exports = styled.span`
     overflow: hidden;
     text-overflow: ellipsis;
 `;
